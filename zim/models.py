@@ -70,7 +70,7 @@ class OrderItem(models.Model):
 
 
 class OrderItemAttribute(models.Model):
-    models.ForeignKey(OrderItem)
+    order_item = models.ForeignKey(OrderItem)
     attribute = models.CharField(max_length=20)
     value = models.CharField(max_length=20)
 

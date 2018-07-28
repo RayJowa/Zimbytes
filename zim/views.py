@@ -2,7 +2,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 
-from .models import Order, OrderItem, Product
+from .models import Order, OrderItem, OrderItemAttribute, Product
 
 
 def fetch_order(request):
@@ -67,14 +67,28 @@ def add_to_cart(request):
 
     product = Product.objects.get(id=request.POST['product'])
 
-    OrderItem(
+
+
+    order_item = OrderItem(
         order=order,
         product=product,
         quantity=request.POST['quantity']
-    ).save()
-    new_product = True
+    )
+    order_item.save()
+
+
+
+    for attribute in product.productattribute_set.all():
+        item_attribute = OrderItemAttribute(
+            order_item=order_item,
+            attribute=attribute.attribute,
+            value=request.POST[attribute.attribute]
+
+        )
+        item_attribute.save()
 
     order_total = '{:0,.2f}'.format(order.order_total())
+
     return JsonResponse({
         'order_total': order_total,
         'order_count': order.orderitem_set.all().count()

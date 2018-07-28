@@ -23,10 +23,11 @@
                         <tr>
                             <td class="thumb"><img src="{{ item.product.productimage_set.all.0.image.url }}" alt=""></td>
                             <td class="details">
-                                <a href="#">item.product.name</a>
+                                <a href="#">{{ item.product.name }}</a>
                                 <ul>
-                                    <li><span>Size: XL</span></li>
-                                    <li><span>Color: Camelot</span></li>
+                                    {% for attr in item.orderitemattribute_set.all %}
+                                        <li><span>{{ attr.attribute }}: {{ attr.value }}</span></li>
+                                    {% endfor %}
                                 </ul>
                             </td>
                             <td class="price text-center"><strong>{{ item.product.price | intcomma }}</strong><br><del class="font-weak"><small>$40.00</small></del></td>

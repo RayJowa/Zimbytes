@@ -17,13 +17,9 @@ function addToCart(product_id) {
 				data: data_set,
 				success:function (data) {
 				    $('#order_total').text(data.order_total);
-				    if (data.new_product == true) {
-                        $('#cart_count').text(data.order_count);
-                        $('#qty').text(' x ' + $('#quantity').val());
-                        $('#add_to_list').show();
-                    } else {
-                        $('#item_'+data.item_id).text(' x ' + data.new_quantity);
-                    }
+                    $('#cart_count').text(data.order_count);
+                    $('#qty').text(' x ' + $('#quantity').val());
+                    $('#add_to_list').show();
                 }
 			});
     }
