@@ -1,0 +1,20 @@
+{% extends 'zim/base.html' %}
+
+{% block title %} Zimclick {% endblock %}
+
+{% block content %}
+    <p>Working here</p>
+    {% for product in products %}
+
+        <div>
+            <a href="{% url 'zim:product_detail' product.id %}"><h1>{{ product.name }}</h1></a>
+
+            <p>{{ product.description }}</p>
+            <p>{{ product.price }}</p>
+            {% for img in product.productimage_set.all %}
+                <img src="{{ img.image.url }}" style="width: 150px">
+            {% endfor %}
+        </div>
+
+    {% endfor %}
+{% endblock %}

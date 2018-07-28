@@ -1,0 +1,14 @@
+.product_height img{
+    position:absolute;
+    top:0;
+    bottom:0;
+    margin:auto;
+}
+
+.product_height{
+    height: 350px;
+}
+
+#add_to_list {
+    display: none;
+}
