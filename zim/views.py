@@ -95,6 +95,17 @@ def add_to_cart(request):
     })
 
 
+def detete_item(request):
+    item = OrderItem.objects.get(id=request.POST['item_id'])
+    order = item.order
+    item.delete()
+
+    order_total = '{:0,.2f}'.format(order.order_total())
+    return JsonResponse({
+        'order_total': order_total
+    })
+
+
 def checkout(request):
     return render(request, 'zim/checkout.html', {
         'order': fetch_order(request)

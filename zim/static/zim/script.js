@@ -24,6 +24,23 @@ function addToCart(product_id) {
 			});
     }
 
+function removeFromCart(item_id) {
+    $.ajax({
+       url:'/delete_item/',
+       method: 'POST',
+       data: {
+           csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+           item_id:item_id
+       },
+        success: function (data) {
+            $('#item'+item_id).hide();
+            $('#sub_total').text(data.order_total);
+            $('#total').text(data.order_total);
+        }
+    });
+
+}
+
 
 
 $(document).ready(function () {

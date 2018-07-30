@@ -2,6 +2,7 @@
 {% load humanize %}
 {% block content %}
     <form id="checkout-form" class="clearfix">
+    {% csrf_token  %}
         <div class="col-md-12">
             <div class="order-summary clearfix">
                 <div class="section-title">
@@ -20,7 +21,7 @@
                     </thead>
                     <tbody>
                         {% for item in order.orderitem_set.all %}
-                        <tr>
+                        <tr id="item{{ item.id }}">
                             <td class="thumb"><img src="{{ item.product.productimage_set.all.0.image.url }}" alt=""></td>
                             <td class="details">
                                 <a href="#">{{ item.product.name }}</a>
@@ -33,7 +34,7 @@
                             <td class="price text-center"><strong>{{ item.product.price | intcomma }}</strong><br><del class="font-weak"><small>$40.00</small></del></td>
                             <td class="qty text-center"><input class="input" type="number" value="{{ item.quantity }}"></td>
                             <td class="total text-center"><strong class="primary-color">{{ item.item_total |intcomma }}</strong></td>
-                            <td class="text-right"><button class="main-btn icon-btn"><i class="fa fa-close"></i></button></td>
+                            <td class="text-right"><button type="button" class="main-btn icon-btn" onclick="removeFromCart({{ item.id }})"><i class="fa fa-close"></i></button></td>
                         </tr>
                         {% endfor %}
 
@@ -42,7 +43,7 @@
                         <tr>
                             <th class="empty" colspan="3"></th>
                             <th>SUBTOTAL</th>
-                            <th colspan="2" class="sub-total">${{ order.order_total | intcomma}}</th>
+                            <th colspan="2" class="sub-total" id="sub_total">${{ order.order_total | intcomma}}</th>
                         </tr>
                         <tr>
                             <th class="empty" colspan="3"></th>
@@ -52,7 +53,7 @@
                         <tr>
                             <th class="empty" colspan="3"></th>
                             <th>TOTAL</th>
-                            <th colspan="2" class="total">${{ order.order_total |intcomma }}</th>
+                            <th colspan="2" class="total" id="total">${{ order.order_total |intcomma }}</th>
                         </tr>
                     </tfoot>
                 </table>
@@ -69,28 +70,26 @@
                     <h3 class="title">Billing Details</h3>
                 </div>
                 <div class="form-group">
-                    <input class="input" type="text" name="first-name" placeholder="First Name">
+                    <input class="input" type="text" name="first-name" placeholder="First Name" required>
                 </div>
                 <div class="form-group">
-                    <input class="input" type="text" name="last-name" placeholder="Last Name">
+                    <input class="input" type="text" name="last-name" placeholder="Last Name" required>
                 </div>
                 <div class="form-group">
-                    <input class="input" type="email" name="email" placeholder="Email">
+                    <input class="input" type="email" name="email" placeholder="Email" required>
                 </div>
                 <div class="form-group">
-                    <input class="input" type="text" name="address" placeholder="Address">
+                    <input class="input" type="text" name="address" placeholder="Address"required>
                 </div>
                 <div class="form-group">
                     <input class="input" type="text" name="city" placeholder="City">
                 </div>
-                <div class="form-group">
-                    <input class="input" type="text" name="country" placeholder="Country">
-                </div>
+
                 <div class="form-group">
                     <input class="input" type="text" name="zip-code" placeholder="ZIP Code">
                 </div>
                 <div class="form-group">
-                    <input class="input" type="tel" name="tel" placeholder="Telephone">
+                    <input class="input" type="tel" name="cell" placeholder="Cell number">
                 </div>
                 <div class="form-group">
                     <div class="input-checkbox">

@@ -915,7 +915,7 @@ textarea.input {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #FFF;
+ /* background-color: #FFF;*/
   opacity: 0;
   visibility: hidden;
   z-index: 0;
