@@ -1,0 +1,96 @@
+{% extends "zim/base.html" %}
+
+{% load i18n %}
+{% load account socialaccount %}
+{% load static %}
+
+{% block head_title %}{% trans "Sign In" %}{% endblock %}
+
+{% block content %}
+<div class="auth_container">
+    <div class="section-title">
+        <h3 class="title">{% trans "Sign In" %}</h3>
+    </div>
+
+
+    {% get_providers as socialaccount_providers %}
+
+    {% if socialaccount_providers %}
+        <p>{% blocktrans with site.name as site_name %}Please sign in with one
+        of your existing third party accounts. Or, <a href="{{ signup_url }}">sign up</a>
+        for a {{ site_name }} account and sign in below:{% endblocktrans %}</p>
+
+        <div class="socialaccount_ballot">
+
+          <ul class="socialaccount_providers">
+              <a title="Facebook" class="socialaccount_provider facebook" href="/accounts/facebook/login/?process=login">
+                  <img src="{% static 'zim/images/facebook-sign-in-button.png' %}">
+              </a>
+
+            {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+          </ul>
+
+          <div class="login-or">{% trans 'or' %}</div>
+
+        </div>
+
+        {% include "socialaccount/snippets/login_extra.html" %}
+
+    {% else %}
+        <p>{% blocktrans %}If you have not created an account yet, then please
+        <a href="{{ signup_url }}">sign up</a> first.{% endblocktrans %}</p>
+    {% endif %}
+
+    <form class="login" method="POST" action="{% url 'account_login' %}">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        {% for hidden_field in form.hidden_fields %}
+            {{ hidden_field.errors }}
+            {{ hidden_field }}
+        {% endfor %}
+
+        {{ form.login.label_tag }}
+        {{ form.login.errors }}
+        <div class="input-group input-group-icon">
+            {{ form.login }}
+            <div class="input-icon"><i class="fa fa-user"></i></div>
+        </div>
+        {{ form.login.help_text }}
+
+
+        {{ form.password.label_tag }}
+        {{ form.password.errors }}
+        <div class="input-group input-group-icon">
+            {{ form.password }}
+            <div class="input-icon"><i class="fa fa-user"></i></div>
+        </div>
+        {{ form.password.help_text }}
+
+        <div class="">
+        {{ form.remember.label_tag }}
+        {{ form.remember.errors }}
+        {{ form.remember }}
+        {{ form.remember.help_text }}
+        </div>
+
+
+
+
+
+        {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+        {% endif %}
+
+
+        <div class="center">
+            <button class="primaryAction primary-btn" type="submit">{% trans "Sign In" %}</button>
+        </div>
+
+        <a class="button secondaryAction" href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
+
+    </form>
+</div>
+
+{% endblock %}

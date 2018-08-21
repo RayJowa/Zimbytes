@@ -1,0 +1,52 @@
+{% extends 'zim/client_profile.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block orders %}
+    {% if orders %}
+    <div class="row">
+    {% for order in orders %}
+        <a href="{% url 'zim:view_order' order.id %}">
+            <div class="col-md-4 col-sm-6 col-xs-6" id="order{{ order.id }}">
+        <div class="product product-single {{ order.status }} order_container">
+        <div>
+            <div class="status_img">
+                       {% with "zim/images/"|add:order.status|add:".png" as image_static %}
+                        <img  src="{% static image_static %}">
+                        {% endwith %}
+            </div>
+            <div class="order_status">{{ order.get_status_display }}</div>
+        </div>
+        <div class="order_img">
+            <img src="{{ order.orderitem_set.all.0.product.productimage_set.all.0.image.url }}" alt="" />
+        </div>
+        <div>
+            <div class="order_btns">
+                {% if order.status == 'awaiting_payment' %}
+                    <a class="primary-btn" href="{% url 'zim:order_checkout' order.id %}" >Checkout <i class="fa fa-arrow-circle-right"></i></a>
+                    <button type="button" class="main-btn icon-btn" onclick="deleteOrder({{ order.id }})"><i class="fa fa-trash-o"></i></button>
+                    {% csrf_token %}
+                {% endif %}
+            </div>
+            <div class="order_info">
+                <p class="order-amount">{{ order.order_total |intcomma }}</p>
+                <p>{{ order.orderitem_set.all.count }} item{{ order.orderitem_set.all.count | pluralize }}</p>
+                <p class="order_date">{{ order.last_modified }} </p>
+
+            </div>
+        </div>
+
+        </div>
+
+
+
+
+    </div>
+        </a>
+    {% endfor %}
+    </div>
+    {% else %}
+        <p>You have no orders yet</p>
+        <p>Shop <a href="{% url 'zim:products' %}">here</a></p>
+    {% endif %}
+{% endblock %}

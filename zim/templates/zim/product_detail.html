@@ -27,7 +27,12 @@
                     <span class="sale">-20%</span>
                 </div>
                 <h2 class="product-name" onclick="addToCart({{ product.id }})" id="product_name">{{ product.name }}</h2>
-                <h3 class="product-price" id="product_price">${{ product.price | intcomma}} <del class="product-old-price">$45.00</del></h3>
+                <h3 class="product-price" id="product_price">
+                    ${{ product.price | intcomma}}
+                    {% if product.old_price %}
+                    <del class="product-old-price">${{ product.old_price | intcomma}}</del>
+                    {% endif %}
+                </h3>
                 <div>
                     <div class="product-rating">
                         <i class="fa fa-star"></i>
@@ -68,7 +73,7 @@
                 <div class="product-btns">
                     <div class="qty-input">
                         <span class="text-uppercase">QTY: </span>
-                        <input class="input" type="number" name="quantity" id="quantity">
+                        <input class="input" type="number" name="quantity" id="quantity" value="1">
                     </div>
 
                     <button type="button" class="primary-btn add-to-cart" onclick="addToCart({{ product.id }})"><i class="fa fa-shopping-cart"></i> Add to Cart</button>
@@ -257,7 +262,7 @@
 {% endblock %}
 
 {% block shopping_cart %}
-    <div class="product product-widget" id="add_to_list">
+    <div class="product product-widget" id="add_to_list" id="item{{ item.id }}">
         <div class="product-thumb">
             <img src="{{ product.productimage_set.all.0.image.url }}" alt="">
         </div>
@@ -265,7 +270,7 @@
             <h3 class="product-price">${{ product.price |intcomma }}<span class="qty" id="qty">x{{ item.quantity }}</span></h3>
             <h2 class="product-name"><a href="#">{{ product.name }}</a></h2>
         </div>
-        <button class="cancel-btn"><i class="fa fa-trash"></i></button>
+        <button class="cancel-btn" onclick="deleteFromCart({{ item.id }})"><i class="fa fa-trash"></i></button>
     </div>
 {% endblock %}
 

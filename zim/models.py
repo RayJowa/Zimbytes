@@ -1,3 +1,7 @@
+import pytz
+
+from allauth.socialaccount.models import SocialAccount
+from datetime import datetime, timedelta
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.db import models
@@ -6,23 +10,74 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
+DEFAULT_COMMISSION_CATEGORY = 1
+
+
 def upload_location(instance, filename):
     return 'images/%s/%s' % (instance.product.id, filename)
 
 
-class Product(models.Model):
-    supplier = models.ForeignKey(User)
-    name = models.CharField(max_length=50)
-    description = models.TextField()
-    price = models.DecimalField(max_digits=12, decimal_places=2)
-    added = models.DateTimeField(auto_now_add=True)
+def upload_banners(instance, filename):
+    return 'images/banners/' + filename
+
+
+def upload_propic(instance, filename):
+    return 'images/propics/' + instance.user.username
+
+
+class CommissionCategory(models.Model):
+    name = models.CharField(max_length=20)
+    supplier = models.DecimalField(max_digits=3, decimal_places=2)
+    affiliate_level_0 = models.DecimalField(max_digits=3, decimal_places=2)
+    affiliate_level_1 = models.DecimalField(max_digits=3, decimal_places=2)
+    affiliate_level_2 = models.DecimalField(max_digits=3, decimal_places=2)
+    affiliate_level_3 = models.DecimalField(max_digits=3, decimal_places=2)
 
     def __str__(self):
         return self.name
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=50)
+    deactivate = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+
+class SubCategory(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return '{} > {}'.format(self.category.name, self.name)
+
+
+class Product(models.Model):
+    supplier = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=12, decimal_places=2)
+    old_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    added = models.DateTimeField(auto_now_add=True)
+    commission_category = models.ForeignKey(CommissionCategory,
+                                            on_delete=models.SET_NULL, null=True, default=DEFAULT_COMMISSION_CATEGORY)
+    sale = models.BooleanField(default=False)
+    category = models.ManyToManyField(SubCategory)
+
+    def __str__(self):
+        return self.name
+
+    def new(self):
+        age = datetime.now(pytz.utc) - self.added
+        if age.days < 30:
+            return True
+        else:
+            return False
+
+
 class ProductImage(models.Model):
-    product = models.ForeignKey(Product)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     image = models.ImageField(upload_to=upload_location,
                               null=True,
                               blank=True,
@@ -34,7 +89,7 @@ class ProductImage(models.Model):
 
 
 class ProductAttribute(models.Model):
-    product = models.ForeignKey(Product)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     attribute = models.CharField(max_length=20)
 
     def __str__(self):
@@ -42,14 +97,25 @@ class ProductAttribute(models.Model):
 
 
 class AttributeValue(models.Model):
-    attribute = models.ForeignKey(ProductAttribute)
+    attribute = models.ForeignKey(ProductAttribute, on_delete=models.CASCADE)
     value = models.CharField(max_length=20)
 
 
 class Order(models.Model):
-    user = models.ForeignKey(User, blank=True, null=True)
-    session = models.ForeignKey(Session, blank=True, null=True)
-    last_modifies = models.DateTimeField(auto_now=True)
+    order_number = models.CharField(max_length=20, blank=True)
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
+    session = models.ForeignKey(Session, blank=True, null=True, on_delete=models.SET_NULL)
+    last_modified = models.DateTimeField(auto_now=True)
+    status = models.CharField(default='awaiting_payment',
+                              max_length=20,
+                              blank=True,
+                              choices=(
+                                     ('confirmed', 'Confirmed'),
+                                     ('shipped', 'Shipped'),
+                                     ('awaiting_shipment', 'Awaiting shipment'),
+                                     ('awaiting_payment', 'Awaiting payment')
+                                 )
+                              )
 
     def order_total(self):
         total = 0
@@ -61,8 +127,8 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order)
-    product = models.ForeignKey(Product)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
 
     def item_total(self):
@@ -70,7 +136,7 @@ class OrderItem(models.Model):
 
 
 class OrderItemAttribute(models.Model):
-    order_item = models.ForeignKey(OrderItem)
+    order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE)
     attribute = models.CharField(max_length=20)
     value = models.CharField(max_length=20)
 
@@ -87,7 +153,7 @@ class BankingDetails(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    mobile_number = models.TextField(max_length=25, blank=True)
+    mobile_number = models.CharField(max_length=25, blank=True)
     user_type = models.CharField(default='client',
                                  max_length=20,
                                  blank=True,
@@ -97,9 +163,56 @@ class Profile(models.Model):
                                      ('affiliate', 'affiliate')
                                  )
                                  )
-    banking_details = models.ForeignKey(BankingDetails, blank=True, null=True)
+    banking_details = models.ForeignKey(BankingDetails, blank=True, null=True, on_delete=models.CASCADE)
     birth_date = models.DateField(blank=True, null=True)
     town = models.CharField(max_length=30, blank=True)
+    completed = models.BooleanField(default=False)
+    client_ref = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='affiliate')
+    affiliate_ref = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='up_ref')
+    affiliate_code = models.CharField(max_length=20, blank=True, null=True)
+    image = models.ImageField(upload_to=upload_propic,
+                              null=True,
+                              blank=True,
+                              width_field='width_field',
+                              height_field='height_field'
+                              )
+    height_field = models.IntegerField(default=0)
+    width_field = models.IntegerField(default=0)
+
+    def __str__(self):
+        if self.affiliate_ref:
+            return '{} < {}'.format(self.user.username, self.affiliate_ref.username)
+        else:
+            return self.user.username
+
+    def aff_1_count(self):
+        return self.user.up_ref.all().count()
+
+    def aff_2_count(self):
+        total = 0
+        for affiliate in self.user.up_ref.all():
+            total += affiliate.aff_1_count()
+
+        return total
+
+    def aff_3_count(self):
+        total = 0
+        for affiliate in self.user.up_ref.all():
+            total += affiliate.aff_2_count()
+        return total
+
+    def total_aff_count_2(self):
+        total = 0
+        total += self.aff_1_count()
+        total += self.aff_2_count()
+        return total
+
+    def total_aff_count_3(self):
+        total = 0
+        total += self.aff_1_count()
+        total += self.aff_2_count()
+        total += self.aff_3_count()
+        return total
 
 
 @receiver(post_save, sender=User)
@@ -107,7 +220,145 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
 
+
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
+
+
+def save_profile(sender, instance, **kwargs):
+    instance.user.full_name = instance.extra_data['name']
+    # instance.user.profile.image = instance.get_avatar_url()
+    instance.user.save()
+
+
+post_save.connect(save_profile, sender=SocialAccount)
+
+
+class ShippingDetails(models.Model):
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    address = models.CharField(max_length=50)
+    city = models.CharField(max_length=30)
+    phone_number = models.CharField(max_length=20)
+    email = models.EmailField(max_length=50)
+
+    def __str__(self):
+        return '{} {}'.format(self.first_name, self.last_name)
+
+
+class ReceiptDetail(models.Model):
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    phone_number = models.CharField(max_length=50)
+    ref = models.CharField(max_length=50)
+    identifier = models.CharField(max_length=50)
+    date = models.DateTimeField(auto_now_add=True)
+    payment_method = models.CharField(max_length=20)
+
+
+class Receipt(models.Model):
+    date = models.DateTimeField(auto_now_add=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    payer = models.ForeignKey(ShippingDetails, on_delete=models.SET_NULL, null=True)
+    receipt_detail = models.ForeignKey(ReceiptDetail, on_delete=models.SET_NULL, null=True)
+
+
+class Sale(models.Model):
+    date = models.DateTimeField(auto_now_add=True)
+    buyer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    affiliate = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='affliliate_sale')
+    shipping_details = models.ForeignKey(ShippingDetails, on_delete=models.SET_NULL, null=True)
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    receipt = models.ForeignKey(Receipt, on_delete=models.SET_NULL, null=True)
+
+    def affiliate_commission_0(self):
+        total = 0
+        for item in self.order.orderitem_set.all():
+            comm = item.product.commission_category.affiliate_level_0 * item.product.price * item.quantity
+            total += comm
+        return total
+
+    def affiliate_commission_1(self):
+        total = 0
+        for item in self.order.orderitem_set.all():
+            comm = item.product.commission_category.affiliate_level_1 * item.product.price * item.quantity
+            total += comm
+        return total
+
+    def affiliate_commission_2(self):
+        total = 0
+        for item in self.order.orderitem_set.all():
+            comm = item.product.commission_category.affiliate_level_2 * item.product.price * item.quantity
+            total += comm
+        return total
+
+    def affiliate_commission_3(self):
+        total = 0
+        for item in self.order.orderitem_set.all():
+            comm = item.product.commission_category.affiliate_level_3 * item.product.price * item.quantity
+            total += comm
+        return total
+
+
+class Delivery (models.Model):
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE)
+    driver = models.CharField(max_length=50, blank=True)
+    pickup_time = models.DateTimeField(blank=True, null=True)
+    delivery_time = models.DateTimeField(blank=True, null=True)
+    status = models.CharField(max_length=20)
+
+
+class Click(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+
+class Banner(models.Model):
+    head = models.CharField(max_length=30)
+    head_color = models.CharField(max_length=20,
+                                  default='primary',
+                                  choices=(('primary', 'Red'),
+                                           ('white', 'White'),
+                                           ('black', 'Black')
+                                           )
+                                  )
+    text = models.CharField(max_length=50)
+    text_color = models.CharField(max_length=20,
+                                  default='white',
+                                  choices=(('primary', 'Red'),
+                                           ('white', 'White'),
+                                           ('black', 'Black')
+                                           )
+                                  )
+    image = models.ImageField(upload_to=upload_banners,
+                              null=True,
+                              blank=True,
+                              width_field='width_field',
+                              height_field='height_field'
+                              )
+    height_field = models.IntegerField(default=0)
+    width_field = models.IntegerField(default=0)
+    active = models.BooleanField(default=True)
+
+
+class Payment(models.Model):
+    date = models.DateTimeField(auto_now_add=True)
+    recipient = models.ForeignKey(User, on_delete=models.PROTECT)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+
+    # TODO consider adding account if there are multiple accounts
+
+
+class Due(models.Model):
+    recipient = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    narration = models.CharField(max_length=50)
+    type = models.CharField(max_length=20)
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE)
+    paid = models.BooleanField(default=False)
+    paid_date = models.DateTimeField(blank=True, null=True)
+    approved = models.BooleanField(default=False)
+    payment = models.ForeignKey(Payment, on_delete=models.PROTECT, null=True, blank=True)
 

@@ -1,0 +1,240 @@
+{% extends 'zim/base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+				<!-- MAIN -->
+				<div id="main" class="col-md-9 col-md-push-3">
+
+                <div class="panel panel-container">
+                    <div class="row">
+                        <div class="col-xs-6 col-md-3 col-lg-3 no-padding">
+                            <div class="panel panel-teal panel-widget border-right">
+                                <div class="row no-padding"><em class="fa fa-xl fa-shopping-cart color-light-primary"></em>
+                                    <div class="large">{{ month_sales }}</div>
+                                    <div class="text-muted">Sales this month</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-md-3 col-lg-3 no-padding">
+                            <div class="panel panel-blue panel-widget border-right">
+                                <div class="row no-padding"><em class="fa fa-xl fa-dollar color-light-primary"></em>
+                                    <div class="large">{{ month_comm | intcomma }}</div>
+                                    <div class="text-muted">This month commision</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-md-3 col-lg-3 no-padding">
+                            <div class="panel panel-orange panel-widget border-right">
+                                <div class="row no-padding"><em class="fa fa-xl fa-users color-light-primary"></em>
+                                    <div class="large">{{ request.user.profile.total_aff_count_3 }}</div>
+                                    <div class="text-muted">Total affiliates</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-md-3 col-lg-3 no-padding">
+                            <div class="panel panel-red panel-widget ">
+                                <div class="row no-padding"><em class="fa fa-xl fa-dollar color-light-primary"></em>
+                                    <div class="large">{{ total_comm | floatformat:2 |intcomma }}</div>
+                                    <div class="text-muted">Total earned</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!--/.row-->
+                </div>
+
+                <div class="row">
+                    <!--column-->
+                    <div class="col-md-6">
+                        <div class="panel panel-default chat">
+                            <div class="panel-heading">
+                                Latest sales
+                            </div>
+                            <div class="panel-body">
+                            {% if sales %}
+                                <table class="sales_tbl">
+                                    <tr>
+                                        <th class="center">Date</th>
+                                        <th class="center">Commission earned</th>
+                                    </tr>
+
+                                    {% for sale in sales %}
+                                        <tr>
+                                        <td class="center">{{ sale.date | date:"M d, Y" }}</td>
+                                        <td class="center">$ {{ sale.affiliate_commission_0 | floatformat:2 |intcomma }}</td>
+
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            {% else  %}
+                                <p>You have no sales yet</p>
+                            {% endif %}
+                            </div>
+
+                        </div>
+
+                        <div class="panel panel-default chat">
+                            <div class="panel-heading ">
+                                Top recruiting affiliates
+                            </div>
+                            <div class="panel-body">
+                            {% if request.user.up_ref.all.count > 0 %}
+                                <table class="sales_tbl">
+                                    <tr>
+                                        <th class="center">Level 1</th>
+                                        <th class="center">Level 2</th>
+                                        <th class="center">Level 3</th>
+                                    </tr>
+
+                                    {% for ref in request.user.up_ref.all %}
+                                        <tr>
+                                            <td class="center">{{ ref.user.username }}</td>
+                                            <td class="center">{{ ref.aff_1_count }}</td>
+                                            <td class="center">{{ ref.aff_2_count }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            {% else  %}
+                                <p>You have no affiliates yet</p>
+                            {% endif %}
+                            </div>
+
+                        </div>
+
+                    </div>
+                
+
+                    <!--/column-->
+
+                    <!--column-->
+                    <div class="col-md-6">
+                        <div class="panel panel-default chat">
+                            <div class="panel-heading">
+                               Top earnings from affiliates
+                            </div>
+                            <div class="panel-body">
+
+                                <table class="sales_tbl">
+                                    <tr>
+                                        <th class="center">Affiliate</th>
+                                        <th class="center">Earnings</th>
+                                    </tr>
+
+
+                                        <tr>
+                                        <td class="center">hhh</td>
+                                        <td class="center">$ 65029</td>
+
+                                        </tr>
+
+                                </table>
+
+                                <p>You have no sales yet</p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="panel panel-default chat">
+                            <div class="panel-heading">
+                               Recent pay-outs
+                            </div>
+                            <div class="panel-body">
+                                {% if payments %}
+                                <table class="sales_tbl">
+                                    <tr>
+                                        <th class="center">Date</th>
+                                        <th class="center">Amount</th>
+                                    </tr>
+                                    {% for payment in payments %}
+                                        <tr>
+                                        <td class="center">{{ payment.date | date:"M d, Y" }}</td>
+                                        <td class="center">$ {{ payment.amount | floatformat:2 |intcomma }}</td>
+                                        </tr>
+                                    {% endfor %}
+
+                                </table>
+                                {% else %}
+                                    <p>You have not received any payouts yet</p>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+                    </div>
+                    <!--/column-->
+                </div>
+
+
+
+
+
+				</div>
+				<!-- /MAIN -->
+
+                <!-- ASIDE -->
+				<div id="aside" class="col-md-3 col-md-pull-9">
+
+
+                    <!-- user profile-->
+                    <div class="widget-container widget_avatar boxed">
+
+                        <div class="avatar">
+                            {% if user.socialaccount_set.all %}
+                                <img src="{{ user.socialaccount_set.all.0.get_avatar_url }}">
+                            {% else %}
+                                {% if request.user.profile.image %}
+                                    <img src="{{ request.user.profile.image.url }}" alt="" />
+                                {% else %}
+                                    <img src="{% static 'zim/images/user.jpg' %}" alt="" />
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="inner">
+                            <h5>{{ user.username }}</h5>
+                            <span class="subtitle">{{ user.get_full_name }}</span>
+
+                            <div class="followers">
+                                <span class="qty">9</span>
+                                <span>Unread messages</span>
+                            </div>
+
+                        </div>
+                    </div>
+                    <!-- user profile-->
+
+					<!-- aside widget -->
+					<div class="aside">
+						<h3 class="aside-title">Account balance</h3>
+                        <h3 class="acc_bal">${{ account_balance | floatformat:2 |intcomma  }}</h3>
+                        <p class="total_bal"> TOTAL: $158.23</p>
+
+
+					</div>
+					<!-- /aside widget -->
+
+                    <!-- aside widget -->
+					<div class="aside">
+                        <div class="well-lg">ADDS</div>
+					</div>
+					<!-- /aside widget -->
+
+                    <!-- aside widget -->
+					<div class="aside">
+                        <div class="well-lg">ADDS</div>
+					</div>
+					<!-- /aside widget -->
+
+                    <!-- aside widget -->
+					<div class="aside">
+                        <div class="well-lg">ADDS</div>
+					</div>
+					<!-- /aside widget -->
+
+				</div>
+				<!-- /ASIDE -->
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

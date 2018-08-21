@@ -20,8 +20,8 @@ from django.contrib import admin
 #from django.urls import include, path
 
 urlpatterns = [
-    url(r'^', include('zim.urls', namespace='zim')),
-    url(r'^accounts/', include('django.contrib.auth.urls')),
+    url(r'^', include(('zim.urls', 'zim'), namespace='zim')),
+    url(r'^accounts/', include('allauth.urls')),
     url('^admin/', admin.site.urls),
 ]
 

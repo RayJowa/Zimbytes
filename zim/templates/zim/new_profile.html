@@ -1,0 +1,62 @@
+{% extends 'zim/base.html' %}
+
+{% block content %}
+    <div class="auth_container">
+
+        <div class="section-title">
+            <h3 class="title">User profile</h3>
+        </div>
+
+        <p>Please complete the information below to enable us to tailor your experience</p>
+
+    <form action="{% url 'zim:new_profile' %}" method="post">
+
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        {% for hidden_field in form.hidden_fields %}
+            {{ hidden_field.errors }}
+            {{ hidden_field }}
+        {% endfor %}
+
+        {{ form.first_name.label_tag }}
+        {{ form.first_name.errors }}
+        <div class="input-group input-group-icon">
+            {{ form.first_name  }}
+            <div class="input-icon"><i class="fa fa-user"></i></div>
+        </div>
+        {{ form.first_name.help_text }}
+
+
+        {{ form.last_name.label_tag }}
+        {{ form.last_name.errors }}
+        <div class="input-group input-group-icon">
+            {{ form.last_name }}
+            <div class="input-icon"><i class="fa fa-user"></i></div>
+        </div>
+        {{ form.last_name.help_text }}
+
+
+        {{ form.mobile_number.label_tag }}
+        {{ form.mobile_number.errors }}
+        <div class="input-group input-group-icon">
+            {{ form.mobile_number }}
+            <div class="input-icon"><i class="fa fa-mobile-phone"></i></div>
+        </div>
+        {{ form.mobile_number.help_text }}
+
+        {{ form.date_of_birth.label_tag }}
+        {{ form.date_of_birth.errors }}
+        <div class="input-group input-group-icon">
+            {{ form.date_of_birth }}
+        </div>
+        {{ form.date_of_birth.help_text }}
+
+
+    <input type="submit" class="primary-btn" value="Save Profile">
+    </form>
+    </div>
+
+
+{% endblock %}

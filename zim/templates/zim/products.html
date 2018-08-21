@@ -200,14 +200,23 @@
                                     <a href="{% url 'zim:product_detail' product.id %}">
 									<div class="product-thumb product_height">
 										<div class="product-label">
-											<span>New</span>
-											<span class="sale">-20%</span>
+                                            {% if product.new %}
+											    <span>New</span>
+                                            {% endif %}
+                                            {% if product.sale %}
+											<span class="sale">SALE</span>
+                                            {% endif %}
 										</div>
 										<!--button class="main-btn quick-view"><i class="fa fa-search-plus"></i> Quick view</button-->
 										<img src="{{ product.productimage_set.all.0.image.url }}" alt="">
 									</div>
 									<div class="product-body">
-										<h3 class="product-price">${{  product.price | intcomma}}<del class="product-old-price">$45.00</del></h3>
+										<h3 class="product-price">
+                                            ${{  product.price | intcomma}}
+                                            {% if product.old_price %}
+                                                <del class="product-old-price">${{  product.old_price | intcomma}}</del>
+                                            {% endif %}
+                                        </h3>
 										<div class="product-rating">
 											<i class="fa fa-star"></i>
 											<i class="fa fa-star"></i>

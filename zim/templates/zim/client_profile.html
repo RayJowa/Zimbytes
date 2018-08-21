@@ -1,0 +1,268 @@
+{% extends 'zim/base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+    <!-- MAIN -->
+    <div id="main" class="col-md-9 col-md-push-3">
+
+
+    <div class="product-tab">
+    <ul class="tab-nav">
+        <li class="active"><a data-toggle="tab" href="#tab1">Orders</a></li>
+        <li><a data-toggle="tab" href="#tab2">Messages </a></li>
+        <li><a data-toggle="tab" href="#tab2">Promotions</a></li>
+    </ul>
+    <div class="tab-content">
+        <div id="tab1" class="tab-pane fade in active">
+
+            {% block orders %}
+
+            {% endblock %}
+
+        </div>
+        <div id="tab2" class="tab-pane fade in">
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="product-reviews">
+                        <div class="single-review">
+                            <div class="review-heading">
+                                <div><a href="#"><i class="fa fa-user-o"></i> John</a></div>
+                                <div><a href="#"><i class="fa fa-clock-o"></i> 27 DEC 2017 / 8:0 PM</a></div>
+                                <div class="review-rating pull-right">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star-o empty"></i>
+                                </div>
+                            </div>
+                            <div class="review-body">
+                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.Duis aute
+                                    irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                            </div>
+                        </div>
+
+                        <div class="single-review">
+                            <div class="review-heading">
+                                <div><a href="#"><i class="fa fa-user-o"></i> John</a></div>
+                                <div><a href="#"><i class="fa fa-clock-o"></i> 27 DEC 2017 / 8:0 PM</a></div>
+                                <div class="review-rating pull-right">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star-o empty"></i>
+                                </div>
+                            </div>
+                            <div class="review-body">
+                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.Duis aute
+                                    irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                            </div>
+                        </div>
+
+                        <div class="single-review">
+                            <div class="review-heading">
+                                <div><a href="#"><i class="fa fa-user-o"></i> John</a></div>
+                                <div><a href="#"><i class="fa fa-clock-o"></i> 27 DEC 2017 / 8:0 PM</a></div>
+                                <div class="review-rating pull-right">
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star"></i>
+                                    <i class="fa fa-star-o empty"></i>
+                                </div>
+                            </div>
+                            <div class="review-body">
+                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.Duis aute
+                                    irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                            </div>
+                        </div>
+
+                        <ul class="reviews-pages">
+                            <li class="active">1</li>
+                            <li><a href="#">2</a></li>
+                            <li><a href="#">3</a></li>
+                            <li><a href="#"><i class="fa fa-caret-right"></i></a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4 class="text-uppercase">Write Your Review</h4>
+                    <p>Your email address will not be published.</p>
+                    <form class="review-form">
+                        <div class="form-group">
+                            <input class="input" type="text" placeholder="Your Name" />
+                        </div>
+                        <div class="form-group">
+                            <input class="input" type="email" placeholder="Email Address" />
+                        </div>
+                        <div class="form-group">
+                            <textarea class="input" placeholder="Your review"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-rating">
+                                <strong class="text-uppercase">Your Rating: </strong>
+                                <div class="stars">
+                                    <input type="radio" id="star5" name="rating" value="5" /><label for="star5"></label>
+                                    <input type="radio" id="star4" name="rating" value="4" /><label for="star4"></label>
+                                    <input type="radio" id="star3" name="rating" value="3" /><label for="star3"></label>
+                                    <input type="radio" id="star2" name="rating" value="2" /><label for="star2"></label>
+                                    <input type="radio" id="star1" name="rating" value="1" /><label for="star1"></label>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="primary-btn">Submit</button>
+                    </form>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+    </div>
+
+
+    </div>
+    <!-- /MAIN -->
+
+    <!-- ASIDE -->
+    <div id="aside" class="col-md-3 col-md-pull-9">
+
+
+        <!-- user profile-->
+        <div class="widget-container widget_avatar boxed">
+
+            <div class="avatar">
+                    <img src="{{ product.productimage_set.all.0.image.url }}" alt="" />
+            </div>
+            <div class="inner">
+                <h5>{{ user.username }}</h5>
+                <span class="subtitle">{{ user.get_full_name }}</span>
+
+                <div class="followers">
+                    <span class="qty">9</span>
+                    <span>Unread messages</span>
+                </div>
+
+            </div>
+        </div>
+        <!-- user profile-->
+
+        <!-- aside widget -->
+        <div class="aside">
+            <h3 class="aside-title">Recently viewed</h3>
+
+            <!-- Product Single -->
+
+                <div class="product product-single">
+                    <a href="{% url 'zim:product_detail' product.id %}">
+                    <div class="product-thumb">
+                        <div class="product-label">
+                            <span>New</span>
+                            <span class="sale">-20%</span>
+                        </div>
+                        <!--button class="main-btn quick-view"><i class="fa fa-search-plus"></i> Quick view</button-->
+                        <img src="{{ product.productimage_set.all.0.image.url }}" alt="">
+                    </div>
+                    <div class="product-body">
+                        <h3 class="product-price">
+                            ${{  product.price | intcomma}}
+                            {% if product.old_price %}
+                            <del class="product-old-price">{{ product.old_price }}</del>
+                            {% endif %}
+
+                        </h3>
+                        <div class="product-rating">
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star"></i>
+                            <i class="fa fa-star-o empty"></i>
+                        </div>
+                        <h2 class="product-name">{{ product.name }}</h2>
+                        <div class="product-btns">
+                            <button class="main-btn icon-btn"><i class="fa fa-heart"></i></button>
+                            <button class="main-btn icon-btn"><i class="fa fa-exchange"></i></button>
+                            <!--button class="primary-btn add-to-cart" onclick="addToCart()" id="add_to_cart"><i class="fa fa-shopping-cart"></i> Add to Cart</button-->
+                        </div>
+                    </div>
+                    </a>
+
+            </div>
+            <!-- /Product Single -->
+            <!-- widget product -->
+            <div class="product product-widget">
+                <div class="product-thumb">
+                    <img src="./img/thumb-product01.jpg" alt="">
+                </div>
+                <div class="product-body">
+                    <h2 class="product-name"><a href="#">Product Name Goes Here</a></h2>
+                    <h3 class="product-price">$32.50 <del class="product-old-price">$45.00</del></h3>
+                    <div class="product-rating">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star-o empty"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- /widget product -->
+
+            <!-- widget product -->
+            <div class="product product-widget">
+                <div class="product-thumb">
+                    <img src="./img/thumb-product01.jpg" alt="">
+                </div>
+                <div class="product-body">
+                    <h2 class="product-name"><a href="#">Product Name Goes Here</a></h2>
+                    <h3 class="product-price">$32.50</h3>
+                    <div class="product-rating">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star-o empty"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- /widget product -->
+        </div>
+        <!-- /aside widget -->
+
+
+
+
+        <!-- aside widget -->
+        <div class="aside">
+            <div class="well-lg">ADDS</div>
+        </div>
+        <!-- /aside widget -->
+
+        <!-- aside widget -->
+        <div class="aside">
+            <div class="well-lg">ADDS</div>
+        </div>
+        <!-- /aside widget -->
+
+        <!-- aside widget -->
+        <div class="aside">
+            <div class="well-lg">ADDS</div>
+        </div>
+        <!-- /aside widget -->
+
+    </div>
+    <!-- /ASIDE -->
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+    $(document).ready( function () {
+        $('.paginated').DataTable();
+
+    } );
+    </script>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "zim/base.html" %}
+
+{% load i18n %}
+{% load account socialaccount %}
+{% load static %}
+
+{% block head_title %}{% trans "Sign Out" %}{% endblock %}
+
+{% block content %}
+<div class="auth_container">
+    <div class="section-title">
+        <h3 class="title">{% trans "Sign out" %}</h3>
+    </div>
+    <p>{% trans 'Please confirm signing out by clicking the button below' %}</p>
+
+    <form method="post" action="{% url 'account_logout' %}">
+        {% csrf_token %}
+        {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+        {% endif %}
+      <button type="submit" class="primary-btn">{% trans 'Sign Out' %}</button>
+</form>
+
+</div>
+
+{% endblock %}

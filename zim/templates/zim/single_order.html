@@ -1,0 +1,244 @@
+{% extends 'zim/client_profile.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block orders %}
+    <div>
+    <a href="{% url 'zim:client_profile' %} " class="primary-btn">back</a>
+    {% csrf_token %}
+
+    <div class="wizard">
+        <div class="wizard-inner">
+            <div class="connecting-line"></div>
+            <ul class="nav nav-tabs" role="tablist">
+
+                <li role="presentation" class="active">
+                    <a href="#step1" data-toggle="tab" aria-controls="step1" role="tab" title="Awaiting payment">
+                        <span class="round-tab"><img src="{% static 'zim/images/awaiting_payment.png' %}"></span>
+                    </a>
+                </li>
+                {% if order_status_count >= 2 %}
+                    <li role="presentation" class="active">
+                {% else %}
+                    <li role="presentation" class="disabled">
+                {% endif %}
+
+                    <a href="#step2" data-toggle="tab" aria-controls="step2" role="tab" title="Awating shipment">
+                        <span class="round-tab"><img src="{% static 'zim/images/awaiting_shipment.png' %}"></span>
+                    </a>
+                </li>
+
+                {% if order_status_count >= 3 %}
+                    <li role="presentation" class="active">
+                {% else %}
+                    <li role="presentation" class="disabled">
+                {% endif %}
+
+                    <a href="#step3" data-toggle="tab" aria-controls="step3" role="tab" title="Shipped">
+                        <span class="round-tab"><img src="{% static 'zim/images/shipped.png' %}"></span>
+                    </a>
+                </li>
+
+                {% if order_status_count == 4 %}
+                    <li role="presentation" class="active">
+                {% else %}
+                    <li role="presentation" class="disabled">
+                {% endif %}
+
+                    <a href="#complete" data-toggle="tab" aria-controls="complete" role="tab" title="Confirmed">
+                        <span class="round-tab"><img src="{% static 'zim/images/confirmed.png' %}"></span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+
+    </div>
+
+
+    <table class="shopping-cart-table table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th></th>
+                <th class="text-center">Price</th>
+                <th class="text-center">Quantity</th>
+                <th class="text-center">Total</th>
+                <th class="text-right"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.orderitem_set.all %}
+            <tr id="item{{ item.id }}">
+                <td class="thumb"><img src="{{ item.product.productimage_set.all.0.image.url }}" alt=""></td>
+                <td class="details">
+                    <a href="#">{{ item.product.name }}</a>
+                    <ul>
+                        {% for attr in item.orderitemattribute_set.all %}
+                            <li><span>{{ attr.attribute }}: {{ attr.value }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td class="price text-center">
+                    <strong>{{ item.product.price | intcomma }}</strong>
+                    {% if item.product.old_price %}
+                        <br><del class="font-weak"><small>{{ item.product.old_price }}</small></del>
+                    {% endif %}
+                </td>
+                <td class="qty text-center"><input class="input" type="number" value="{{ item.quantity }}" name="qty{{ item.id }}" id="qty{{ item.id }}" onchange="changeQuantity({{ item.id }})"></td>
+                <td class="total text-center"><strong class="primary-color" id="item_{{ item.id }}_total">{{ item.item_total |intcomma }}</strong></td>
+                <td class="text-right"><button type="button" class="main-btn icon-btn" onclick="removeFromCart({{ item.id }})"><i class="fa fa-close"></i></button></td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+        <tfoot>
+            <tr>
+                <th class="empty" colspan="3"></th>
+                <th>SUBTOTAL</th>
+                <th colspan="2" class="sub-total" id="sub_total">${{ order.order_total | intcomma}}</th>
+            </tr>
+            <tr>
+                <th class="empty" colspan="3"></th>
+                <th>SHIPING</th>
+                <td colspan="2">Free Shipping</td>
+            </tr>
+            <tr>
+                <th class="empty" colspan="3"></th>
+                <th>TOTAL</th>
+                <th colspan="2" class="total" id="total">${{ order.order_total |intcomma }}</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    {% if order.status == 'awaiting_payment' %}
+        <a class="primary-btn" href="{% url 'zim:order_checkout' order.id %}" >Checkout <i class="fa fa-arrow-circle-right"></i></a>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="panel panel-default chat">
+					<div class="panel-heading">
+						Chat
+                    </div>
+					<div class="panel-body">
+						<ul>
+							<li class="left clearfix"><span class="chat-img pull-left">
+								<img src="http://placehold.it/60/30a5ff/fff" alt="User Avatar" class="img-circle" />
+								</span>
+								<div class="chat-body clearfix">
+									<div class="header"><strong class="primary-font">John Doe</strong> <small class="text-muted">32 mins ago</small></div>
+									<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ante turpis, rutrum ut ullamcorper sed, dapibus ac nunc.</p>
+								</div>
+							</li>
+							<li class="right clearfix"><span class="chat-img pull-right">
+								<img src="http://placehold.it/60/dde0e6/5f6468" alt="User Avatar" class="img-circle" />
+								</span>
+								<div class="chat-body clearfix">
+									<div class="header"><strong class="pull-left primary-font">Jane Doe</strong> <small class="text-muted">6 mins ago</small></div>
+									<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ante turpis, rutrum ut ullamcorper sed, dapibus ac nunc.</p>
+								</div>
+							</li>
+							<li class="left clearfix"><span class="chat-img pull-left">
+								<img src="http://placehold.it/60/30a5ff/fff" alt="User Avatar" class="img-circle" />
+								</span>
+								<div class="chat-body clearfix">
+									<div class="header"><strong class="primary-font">John Doe</strong> <small class="text-muted">32 mins ago</small></div>
+									<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ante turpis, rutrum ut ullamcorper sed, dapibus ac nunc.</p>
+								</div>
+							</li>
+						</ul>
+					</div>
+					<div class="panel-footer">
+						<div class="input-group">
+							<input id="btn-input" type="text" class="form-control input-md" placeholder="Type your message here..." /><span class="input-group-btn">
+								<button class="btn btn-primary btn-md" id="btn-chat">Send</button>
+						</span></div>
+					</div>
+				</div>
+        </div>
+
+        <div class="col-sm-6">
+            <div class="panel panel-default ">
+					<div class="panel-heading">
+						Timeline
+						<ul class="pull-right panel-settings panel-button-tab-right">
+							<li class="dropdown"><a class="pull-right dropdown-toggle" data-toggle="dropdown" href="#">
+								<em class="fa fa-cogs"></em>
+							</a>
+								<ul class="dropdown-menu dropdown-menu-right">
+									<li>
+										<ul class="dropdown-settings">
+											<li><a href="#">
+												<em class="fa fa-cog"></em> Settings 1
+											</a></li>
+											<li class="divider"></li>
+											<li><a href="#">
+												<em class="fa fa-cog"></em> Settings 2
+											</a></li>
+											<li class="divider"></li>
+											<li><a href="#">
+												<em class="fa fa-cog"></em> Settings 3
+											</a></li>
+										</ul>
+									</li>
+								</ul>
+							</li>
+						</ul>
+						<span class="pull-right clickable panel-toggle panel-button-tab-left"><em class="fa fa-toggle-up"></em></span></div>
+					<div class="panel-body timeline-container">
+						<ul class="timeline">
+							<li>
+								<div class="timeline-badge"><em class="glyphicon glyphicon-pushpin"></em></div>
+								<div class="timeline-panel">
+									<div class="timeline-heading">
+										<h4 class="timeline-title">Lorem ipsum dolor sit amet</h4>
+									</div>
+									<div class="timeline-body">
+										<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer at sodales nisl. Donec malesuada orci ornare risus finibus feugiat.</p>
+									</div>
+								</div>
+							</li>
+							<li>
+								<div class="timeline-badge primary"><em class="glyphicon glyphicon-link"></em></div>
+								<div class="timeline-panel">
+									<div class="timeline-heading">
+										<h4 class="timeline-title">Lorem ipsum dolor sit amet</h4>
+									</div>
+									<div class="timeline-body">
+										<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+									</div>
+								</div>
+							</li>
+							<li>
+								<div class="timeline-badge"><em class="glyphicon glyphicon-camera"></em></div>
+								<div class="timeline-panel">
+									<div class="timeline-heading">
+										<h4 class="timeline-title">Lorem ipsum dolor sit amet</h4>
+									</div>
+									<div class="timeline-body">
+										<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer at sodales nisl. Donec malesuada orci ornare risus finibus feugiat.</p>
+									</div>
+								</div>
+							</li>
+							<li>
+								<div class="timeline-badge"><em class="glyphicon glyphicon-paperclip"></em></div>
+								<div class="timeline-panel">
+									<div class="timeline-heading">
+										<h4 class="timeline-title">Lorem ipsum dolor sit amet</h4>
+									</div>
+									<div class="timeline-body">
+										<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+									</div>
+								</div>
+							</li>
+						</ul>
+					</div>
+				</div>
+        </div>
+    </div>
+
+    <a href="{% url 'zim:client_profile' %} " class="primary-btn">back</a>
+   </div>
+
+{% endblock %}

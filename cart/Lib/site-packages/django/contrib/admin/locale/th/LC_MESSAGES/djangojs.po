@@ -3,14 +3,15 @@
 # Translators:
 # Jannis Leidel <jannis@leidel.info>, 2011
 # Kowit Charoenratchatabhan <kowit.s.c@gmail.com>, 2011-2012
+# Perry Roper <perry@getwashdrop.com>, 2017
 # Suteepat Damrongyingsupab <tianissimo@hotmail.com>, 2012
 msgid ""
 msgstr ""
 "Project-Id-Version: django\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-10-09 17:42+0200\n"
-"PO-Revision-Date: 2015-10-10 08:16+0000\n"
-"Last-Translator: Jannis Leidel <jannis@leidel.info>\n"
+"POT-Creation-Date: 2016-05-17 23:12+0200\n"
+"PO-Revision-Date: 2017-09-18 05:04+0000\n"
+"Last-Translator: Perry Roper <perry@getwashdrop.com>\n"
 "Language-Team: Thai (http://www.transifex.com/django/django/language/th/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -124,7 +125,7 @@ msgid "Noon"
 msgstr "เที่ยงวัน"
 
 msgid "6 p.m."
-msgstr ""
+msgstr "หกโมงเย็น"
 
 msgid "Cancel"
 msgstr "ยกเลิก"
@@ -141,15 +142,69 @@ msgstr "เมื่อวาน"
 msgid "Tomorrow"
 msgstr "พรุ่งนี้"
 
-msgid ""
-"January February March April May June July August September October November "
-"December"
-msgstr ""
-"มกราคม กุมภาพันธ์ มีนาคม เมษายน พฤษภาคม มิถุนายน กรกฎาคม สิงหาคม กันยายน ตุลาคม "
-"พฤศจิกายน ธันวาคม"
+msgid "January"
+msgstr "มกราคม"
 
-msgid "S M T W T F S"
-msgstr "อา. จ. อ. พ. พฤ. ศ. ส."
+msgid "February"
+msgstr "กุมภาพันธ์"
+
+msgid "March"
+msgstr "มีนาคม"
+
+msgid "April"
+msgstr "เมษายน"
+
+msgid "May"
+msgstr "พฤษภาคม"
+
+msgid "June"
+msgstr "มิถุนายน"
+
+msgid "July"
+msgstr "กรกฎาคม"
+
+msgid "August"
+msgstr "สิงหาคม"
+
+msgid "September"
+msgstr "กันยายน"
+
+msgid "October"
+msgstr "ตุลาคม"
+
+msgid "November"
+msgstr "พฤศจิกายน"
+
+msgid "December"
+msgstr "ธันวาคม"
+
+msgctxt "one letter Sunday"
+msgid "S"
+msgstr "อา."
+
+msgctxt "one letter Monday"
+msgid "M"
+msgstr "จ."
+
+msgctxt "one letter Tuesday"
+msgid "T"
+msgstr "อ."
+
+msgctxt "one letter Wednesday"
+msgid "W"
+msgstr "พ."
+
+msgctxt "one letter Thursday"
+msgid "T"
+msgstr "พฤ."
+
+msgctxt "one letter Friday"
+msgid "F"
+msgstr "ศ."
+
+msgctxt "one letter Saturday"
+msgid "S"
+msgstr "ส."
 
 msgid "Show"
 msgstr "แสดง"

@@ -1,14 +1,16 @@
 {% extends 'zim/base.html' %}
 {% load humanize %}
+{% load static %}
 {% block content %}
-    <form id="checkout-form" class="clearfix">
+    <form id="checkout-form" class="clearfix" action="{% url 'zim:checkout' %}" method="post">
     {% csrf_token  %}
         <div class="col-md-12">
             <div class="order-summary clearfix">
                 <div class="section-title">
                     <h3 class="title">Order Review</h3>
                 </div>
-                <table class="shopping-cart-table table">
+                {% if order %}
+                    <table class="shopping-cart-table table">
                     <thead>
                         <tr>
                             <th>Product</th>
@@ -31,9 +33,14 @@
                                     {% endfor %}
                                 </ul>
                             </td>
-                            <td class="price text-center"><strong>{{ item.product.price | intcomma }}</strong><br><del class="font-weak"><small>$40.00</small></del></td>
-                            <td class="qty text-center"><input class="input" type="number" value="{{ item.quantity }}"></td>
-                            <td class="total text-center"><strong class="primary-color">{{ item.item_total |intcomma }}</strong></td>
+                            <td class="price text-center">
+                                <strong>{{ item.product.price | intcomma }}</strong>
+                                {% if item.product.old_price %}
+                                    <br><del class="font-weak"><small>{{ item.product.old_price }}</small></del>
+                                {% endif %}
+                            </td>
+                            <td class="qty text-center"><input class="input" type="number" value="{{ item.quantity }}" name="qty{{ item.id }}" id="qty{{ item.id }}" onchange="changeQuantity({{ item.id }})"></td>
+                            <td class="total text-center"><strong class="primary-color" id="item_{{ item.id }}_total">{{ item.item_total |intcomma }}</strong></td>
                             <td class="text-right"><button type="button" class="main-btn icon-btn" onclick="removeFromCart({{ item.id }})"><i class="fa fa-close"></i></button></td>
                         </tr>
                         {% endfor %}
@@ -57,52 +64,55 @@
                         </tr>
                     </tfoot>
                 </table>
-                <div class="pull-right">
-                    <button class="primary-btn">Place Order</button>
-                </div>
+                {% else %}
+                    <p> No items in cart yet</p>
+                    <p>Shop <a href="{% url 'zim:products' %}">here</a></p>
+                {% endif %}
             </div>
 
         </div>
+
+
         <div class="col-md-6">
             <div class="billing-details">
-                <p>Already a customer ? <a href="#">Login</a></p>
+                {% if not user.is_authenticated %}
+                    <p>Already a customer ? <a class="primary-btn" href="{% url 'account_login' %}">Login</a></p>
+                {% endif %}
                 <div class="section-title">
                     <h3 class="title">Billing Details</h3>
                 </div>
-                <div class="form-group">
-                    <input class="input" type="text" name="first-name" placeholder="First Name" required>
-                </div>
-                <div class="form-group">
-                    <input class="input" type="text" name="last-name" placeholder="Last Name" required>
-                </div>
-                <div class="form-group">
-                    <input class="input" type="email" name="email" placeholder="Email" required>
-                </div>
-                <div class="form-group">
-                    <input class="input" type="text" name="address" placeholder="Address"required>
-                </div>
-                <div class="form-group">
-                    <input class="input" type="text" name="city" placeholder="City">
-                </div>
+                {% if form.non_field_errors   %}
+                    <div class="alert alert-warning">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+                {% for hidden_field in form.hidden_fields %}
+                    {{ hidden_field.errors }}
+                    {{ hidden_field }}
+                {% endfor %}
 
-                <div class="form-group">
-                    <input class="input" type="text" name="zip-code" placeholder="ZIP Code">
-                </div>
-                <div class="form-group">
-                    <input class="input" type="tel" name="cell" placeholder="Cell number">
-                </div>
+                {% for field in form.visible_fields %}
+                    {{ field.label_tag }}
+                    {% if field.errors %}
+                        <div class="alert alert-warning">
+                        {{ field.errors }}
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                       {{ field }}
+                    </div>
+                    {{ field.help_text }}
+                {% endfor %}
+
                 <div class="form-group">
                     <div class="input-checkbox">
                         <input type="checkbox" id="register">
                         <label class="font-weak" for="register">Create Account?</label>
-                        <div class="caption">
-                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt.
-                                <p>
-                                    <input class="input" type="password" name="password" placeholder="Enter Your Password">
-                        </div>
+
                     </div>
                 </div>
             </div>
+            <input type="submit" value="Save">
         </div>
 
         <div class="col-md-6">
@@ -128,38 +138,52 @@
                 </div>
             </div>
 
+
+
+                <div>
+                    {% if user %}
+                        <p>{{ user.profile.client_ref.username }}</p>
+                        <p>Not correct?</p>
+                    {% endif %}
+                        <input type="tel" id="affiliate" name="affiliate" value="{{ user.profile.client_ref.profile.affiliate_code }}">
+                        <input type="button" value="Change" onclick="changeAffiliate()">
+                </div>
             <div class="payments-methods">
                 <div class="section-title">
                     <h4 class="title">Payments Methods</h4>
                 </div>
-                <div class="input-checkbox">
-                    <input type="radio" name="payments" id="payments-1" checked>
-                    <label for="payments-1">Direct Bank Transfer</label>
-                    <div class="caption">
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                            <p>
+                <div>
+                    <div>
+                        <div class="payment_img">
+                            <img src="{% static 'zim/images/ecocash.png' %}">
+                        </div>
+                        <input class="input" id="ecocash_phone" name="ecocash_phone">
+                    </div>
+
+
+
+                    <div class="pull-right">
+                        <button class="primary-btn" id="place_order">Place Order</button>
+                    </div>
+                    <button id="myBtn" type="button">Open Modal</button>
+
+                    <div id="myModal" class="modal">
+
+                      <!-- Modal content -->
+                      <div class="modal-content">
+                            <span id="close_modal" class="close">&times;</span>
+                                <h4>We're processing your payment...</h4>
+                                <p>Please enter your pin on your phone</p>
+                      </div>
+
                     </div>
                 </div>
-                <div class="input-checkbox">
-                    <input type="radio" name="payments" id="payments-2">
-                    <label for="payments-2">Cheque Payment</label>
-                    <div class="caption">
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                            <p>
-                    </div>
-                </div>
-                <div class="input-checkbox">
-                    <input type="radio" name="payments" id="payments-3">
-                    <label for="payments-3">Paypal System</label>
-                    <div class="caption">
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                            <p>
-                    </div>
-                </div>
+
             </div>
         </div>
-
-
     </form>
+
+
+
 
 {% endblock %}

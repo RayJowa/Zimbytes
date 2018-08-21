@@ -1,3 +1,4 @@
-Django 1.9
+Django 1.11
 Python 3.6
 pillow
+django-allauth 0.36
