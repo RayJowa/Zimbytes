@@ -23,8 +23,15 @@
         <div class="col-md-6">
             <div class="product-body">
                 <div class="product-label">
-                    <span>New</span>
-                    <span class="sale">-20%</span>
+
+                    {% if product.new %}
+                        <span>New</span>
+                    {% endif %}
+
+                    {% if product.sale %}
+                        <span class="sale">SALE</span>
+                    {% endif %}
+
                 </div>
                 <h2 class="product-name" onclick="addToCart({{ product.id }})" id="product_name">{{ product.name }}</h2>
                 <h3 class="product-price" id="product_price">
@@ -33,7 +40,7 @@
                     <del class="product-old-price">${{ product.old_price | intcomma}}</del>
                     {% endif %}
                 </h3>
-                <div>
+                <!--div>
                     <div class="product-rating">
                         <i class="fa fa-star"></i>
                         <i class="fa fa-star"></i>
@@ -42,32 +49,25 @@
                         <i class="fa fa-star-o empty"></i>
                     </div>
                     <a href="#">3 Review(s) / Add Review</a>
-                </div>
+                </div-->
                 <p><strong>Availability:</strong> In Stock</p>
                 <p><strong>Brand:</strong> E-SHOP</p>
-                <p>{{ product.description|linebreaks  }}</p>
                 <form action="#" method="post">
                 {% csrf_token %}
                 <div class="product-options">
 
                     {% for attribute in product.productattribute_set.all %}
-                    <div>
-                    <ul class="size-option">
-                        <li><span class="text-uppercase">{{ attribute.attribute }}</span></li>
-                        {% for value in attribute.attributevalue_set.all %}
-                            <li><a href="#">{{ value.value }}</a></li>
-                        {% endfor %}
-                    </ul>
-                    <input hidden  name="{{ attribute.attribute }}" id="{{ attribute.attribute }}">
+                    <div id="div{{ attribute.id }}" data-id="{{ attribute.id }}">
+                        <ul class="size-option">
+                            <li><span class="text-uppercase" data-id="{{ attribute.id }}">{{ attribute.attribute }}</span></li>
+                            {% for value in attribute.attributevalue_set.all %}
+                                <li><a href="#">{{ value.value }}</a></li>
+                            {% endfor %}
+                        </ul>
+                        <input hidden  name="attr{{ attribute.id }}" id="attr{{ attribute.id }}">
                     </div>
                     {% endfor %}
-                    <ul class="color-option">
-                        <li><span class="text-uppercase">Color:</span></li>
-                        <li class="active"><a href="#" style="background-color:#475984;"></a></li>
-                        <li><a href="#" style="background-color:#8A2454;"></a></li>
-                        <li><a href="#" style="background-color:#BF6989;"></a></li>
-                        <li><a href="#" style="background-color:#9A54D8;"></a></li>
-                    </ul>
+
                 </div>
 
                 <div class="product-btns">
@@ -82,7 +82,9 @@
                         <button class="main-btn icon-btn" type="button"><i class="fa fa-exchange"></i></button>
                         <button class="main-btn icon-btn" type="button"><i class="fa fa-share-alt"></i></button>
                     </div>
+
                 </div>
+                <div class="addthis_inline_share_toolbox"></div>
                 </form>
             </div>
         </div>
@@ -90,18 +92,17 @@
             <div class="product-tab">
                 <ul class="tab-nav">
                     <li class="active"><a data-toggle="tab" href="#tab1">Description</a></li>
-                    <li><a data-toggle="tab" href="#tab1">Details</a></li>
-                    <li><a data-toggle="tab" href="#tab2">Reviews (3)</a></li>
+                    <li><a data-toggle="tab" href="#tab2">Reviews {% if reviews %}({{ reviews.count }}){% endif %}</a></li>
                 </ul>
                 <div class="tab-content">
                     <div id="tab1" class="tab-pane fade in active">
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
-                            irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                        <p>{{ product.description|linebreaks  }}</p>
                     </div>
                     <div id="tab2" class="tab-pane fade in">
 
                         <div class="row">
                             <div class="col-md-6">
+                                {% if reviews %}
                                 <div class="product-reviews">
                                     <div class="single-review">
                                         <div class="review-heading">
@@ -164,34 +165,12 @@
                                         <li><a href="#"><i class="fa fa-caret-right"></i></a></li>
                                     </ul>
                                 </div>
+                                {% else %}
+                                    <p>No reviews yet</p>
+                                {% endif %}
                             </div>
                             <div class="col-md-6">
-                                <h4 class="text-uppercase">Write Your Review</h4>
-                                <p>Your email address will not be published.</p>
-                                <form class="review-form">
-                                    <div class="form-group">
-                                        <input class="input" type="text" placeholder="Your Name" />
-                                    </div>
-                                    <div class="form-group">
-                                        <input class="input" type="email" placeholder="Email Address" />
-                                    </div>
-                                    <div class="form-group">
-                                        <textarea class="input" placeholder="Your review"></textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <div class="input-rating">
-                                            <strong class="text-uppercase">Your Rating: </strong>
-                                            <div class="stars">
-                                                <input type="radio" id="star5" name="rating" value="5" /><label for="star5"></label>
-                                                <input type="radio" id="star4" name="rating" value="4" /><label for="star4"></label>
-                                                <input type="radio" id="star3" name="rating" value="3" /><label for="star3"></label>
-                                                <input type="radio" id="star2" name="rating" value="2" /><label for="star2"></label>
-                                                <input type="radio" id="star1" name="rating" value="1" /><label for="star1"></label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button class="primary-btn">Submit</button>
-                                </form>
+                                TBA
                             </div>
                         </div>
 
@@ -228,27 +207,46 @@
     <!-- Product Single -->
     <div class="col-md-3 col-sm-6 col-xs-6">
         <div class="product product-single">
-            <div class="product-thumb product_height">
-                <button class="main-btn quick-view"><i class="fa fa-search-plus"></i> Quick view</button>
-                <img src="{{ product.productimage_set.all.0.image.url }}" alt="">
-            </div>
-            <div class="product-body">
-                <h3 class="product-price">{{ product.price | intcomma}}</h3>
-                <div class="product-rating">
-                    <i class="fa fa-star"></i>
-                    <i class="fa fa-star"></i>
-                    <i class="fa fa-star"></i>
-                    <i class="fa fa-star"></i>
-                    <i class="fa fa-star-o empty"></i>
-                </div>
-                <h2 class="product-name"><a href="{% url 'zim:product_detail' product.id %}">{{ product.name }}</a></h2>
-                <div class="product-btns">
-                    <button class="main-btn icon-btn"><i class="fa fa-heart"></i></button>
-                    <button class="main-btn icon-btn"><i class="fa fa-exchange"></i></button>
-                    <button class="primary-btn add-to-cart"><i class="fa fa-shopping-cart"></i> Add to Cart</button>
-                </div>
-            </div>
-        </div>
+                        <a href="{% url 'zim:product_detail' product.id %}">
+                        <div class="product-thumb product_height">
+                            <div class="product-label">
+                                {% if product.new %}
+                                    <span>New</span>
+                                {% endif %}
+                                {% if product.sale %}
+                                <span class="sale">SALE</span>
+                                {% endif %}
+                            </div>
+                            <!--button class="main-btn quick-view"><i class="fa fa-search-plus"></i> Quick view</button-->
+                            <img src="{{ product.productimage_set.all.0.image.url }}" alt="">
+                        </div>
+                        <div class="product-body">
+                            <h3 class="product-price">
+                                ${{  product.price | intcomma}}
+                                {% if product.old_price %}
+                                    <del class="product-old-price">${{  product.old_price | intcomma}}</del>
+                                {% endif %}
+                            </h3>
+                            <!--div class="product-rating">
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star"></i>
+                                <i class="fa fa-star-o empty"></i>
+                            </div-->
+                            <h2 class="product-name">{{ product.name }}</h2>
+                            <div class="product-btns">
+                                <button class="main-btn icon-btn"><i class="fa fa-heart"></i></button>
+                                <a href="whatsapp://send?text={{ product.get_url }}" data-action="share/whatsapp/share">
+                                    <button class="main-btn icon-btn"><i class="fa fa-whatsapp"></i></button>
+                                </a>
+                                <button class="main-btn icon-btn"><i class="fa fa-facebook"></i></button>
+                                <button class="main-btn icon-btn"><i class="fa fa-instagram"></i></button>
+                                <!--button class="primary-btn add-to-cart" onclick="addToCart()" id="add_to_cart"><i class="fa fa-shopping-cart"></i> Add to Cart</button-->
+                            </div>
+                        </div>
+                        </a>
+                    </div>
     </div>
     <!-- /Product Single -->
     {% endfor %}
