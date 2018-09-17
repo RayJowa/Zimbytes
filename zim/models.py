@@ -5,16 +5,21 @@ from datetime import datetime, timedelta
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Count, Max, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import sys
 
 
+from Zimbytes.settings import ALLOWED_HOSTS
 DEFAULT_COMMISSION_CATEGORY = 1
 
 
 def upload_location(instance, filename):
-    return 'images/%s/%s' % (instance.product.id, filename)
+    return 'images/products/%s/%s' % (instance.product.id, filename)
 
 
 def upload_banners(instance, filename):
@@ -23,6 +28,10 @@ def upload_banners(instance, filename):
 
 def upload_propic(instance, filename):
     return 'images/propics/' + instance.user.username
+
+
+def upload_shopics(instance, filename):
+    return 'images/shops/%s/%s' % (instance.id, filename)
 
 
 class CommissionCategory(models.Model):
@@ -44,6 +53,15 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    def most_selling(self):
+        most_sub = self.subcategory_set.all().annotate(sold=Count('product__orderitem')).order_by('sold')[0]
+        most_sold = most_sub.product_set.all().annotate(sold=Count('orderitem')).order_by('sold')
+
+        if len(most_sold) > 0:
+            return most_sold[0]
+        else:
+            return most_sub.product_set.first()
+
 
 class SubCategory(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
@@ -51,6 +69,76 @@ class SubCategory(models.Model):
 
     def __str__(self):
         return '{} > {}'.format(self.category.name, self.name)
+
+
+# TODO enable second level sub category
+class SubCategory2(models.Model):
+    sub_category = models.ForeignKey(SubCategory, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return '{} > {}'.format(self.category.name, self.name)
+
+
+class Collection(models.Model):
+    name = models.CharField(max_length=50)
+    active = models.BooleanField(default=False)
+    date_updated = models.DateTimeField(auto_now_add=True)  # TODO update this to when last 'updated'
+    home_photo = models.ImageField(upload_to=upload_shopics,
+                                   null=True,
+                                   blank=True,
+                                   width_field='width_field',
+                                   height_field='height_field'
+                                   )
+    height_field = models.IntegerField(default=0)
+    width_field = models.IntegerField(default=0)
+    ''''
+    def save(self, *args, **kwargs):
+        try:
+            image = Image.open(self.home_photo)
+            current_aspect = self.width_field / self.height_field
+            new_aspect = 4 / 3
+
+            output = BytesIO()
+
+            if current_aspect == new_aspect:
+                pass
+            elif current_aspect > new_aspect:
+                rqw = new_aspect * self.height_field
+                left = (self.width_field - rqw) / 2
+                upper = 0
+                right = left + rqw
+                lower = self.height_field
+
+                box = (left, upper, right, lower)
+                new_image = image.crop(box)
+                new_image.save(output, format='PNG', quality=100)
+                output.seek(0)
+
+                self.home_photo = InMemoryUploadedFile(output, 'ImageField',
+                                                       "%s.jpg" % self.home_photo.name.split('.')[0],
+                                                       'image/jpeg', sys.getsizeof(output), None)
+
+                super(Collection, self).save()
+            else:
+                rqh = (3 / 4) * self.width_field
+                left = 0
+                upper = (self.height_field - rqh) / 2
+                right = self.width_field
+                lower = left + rqh
+                box = (left, upper, right, lower)
+                new_image = image.crop(box)
+                new_image.save(output, format='PNG', quality=100)
+                output.seek(0)
+
+                self.home_photo = InMemoryUploadedFile(output, 'ImageField',
+                                                       "%s.png" % self.home_photo.name.split('.')[0],
+                                                       'image/jpeg', sys.getsizeof(output), None)
+
+            super(Collection, self).save()
+        except ValueError:
+            super(Collection, self).save()
+'''
 
 
 class Product(models.Model):
@@ -64,6 +152,7 @@ class Product(models.Model):
                                             on_delete=models.SET_NULL, null=True, default=DEFAULT_COMMISSION_CATEGORY)
     sale = models.BooleanField(default=False)
     category = models.ManyToManyField(SubCategory)
+    collection = models.ForeignKey(Collection, on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -74,6 +163,11 @@ class Product(models.Model):
             return True
         else:
             return False
+
+    def get_url(self):
+        domain = ALLOWED_HOSTS[0]
+
+        return 'http://%s:8000/product_detail/%s' % (domain, self.id)
 
 
 class ProductImage(models.Model):
@@ -96,6 +190,16 @@ class ProductAttribute(models.Model):
         return self.product.name + ' ' + self.attribute
 
 
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.TextField()
+    rating = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return self.product.name
+
+
 class AttributeValue(models.Model):
     attribute = models.ForeignKey(ProductAttribute, on_delete=models.CASCADE)
     value = models.CharField(max_length=20)
@@ -116,6 +220,9 @@ class Order(models.Model):
                                      ('awaiting_payment', 'Awaiting payment')
                                  )
                               )
+    paid_date = models.DateTimeField(null=True, blank=True)
+    shipped_date = models.DateTimeField(null=True, blank=True)
+    confirmed_date = models.DateTimeField(null=True, blank=True)
 
     def order_total(self):
         total = 0
@@ -154,6 +261,7 @@ class BankingDetails(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     mobile_number = models.CharField(max_length=25, blank=True)
+    phone_verified = models.BooleanField(default=False)
     user_type = models.CharField(default='client',
                                  max_length=20,
                                  blank=True,
@@ -201,6 +309,11 @@ class Profile(models.Model):
             total += affiliate.aff_2_count()
         return total
 
+    def get_url(self):
+        domain = ALLOWED_HOSTS[0]
+
+        return 'http://%s:8000/signup/%s' % (domain, self.user.id)
+
     def total_aff_count_2(self):
         total = 0
         total += self.aff_1_count()
@@ -214,6 +327,23 @@ class Profile(models.Model):
         total += self.aff_3_count()
         return total
 
+    def up_comm(self): # How much commision user earns for immediate referer
+        lv1 = 0
+        lv2 = 0
+        lv3 = 0
+        for sale in self.user.affliliate_sale.all():
+            lv1 += sale.affiliate_commission_1()
+
+        for affiliate_2 in self.user.up_ref.all():
+            for sale in affiliate_2.user.affliliate_sale.all():
+                lv2 += sale.affiliate_commission_2()
+
+            for affiliate_3 in affiliate_2.user.up_ref.all():
+                for sale in affiliate_3.user.affliliate_sale.all():
+                    lv3 += sale.affiliate_commission_3()
+
+        return lv1 + lv2 + lv3
+
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -221,8 +351,12 @@ def create_user_profile(sender, instance, created, **kwargs):
         Profile.objects.create(user=instance)
 
 
+
+
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
+    instance.profile.mobile_number = instance.username
+    instance.profile.affiliate_code = instance.username
     instance.profile.save()
 
 
@@ -315,6 +449,102 @@ class Click(models.Model):
     date = models.DateTimeField(auto_now_add=True)
 
 
+class Payment(models.Model):
+    date = models.DateTimeField(auto_now_add=True)
+    recipient = models.ForeignKey(User, on_delete=models.PROTECT)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+
+    # TODO consider adding account if there are multiple accounts
+
+
+class Due(models.Model):
+    recipient = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    narration = models.CharField(max_length=50)
+    type = models.CharField(max_length=20)
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE)
+    paid = models.BooleanField(default=False)
+    paid_date = models.DateTimeField(blank=True, null=True)
+    approved = models.BooleanField(default=False)
+    payment = models.ForeignKey(Payment, on_delete=models.PROTECT, null=True, blank=True)
+
+
+class Message(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sender')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='receiver')
+    date = models.DateTimeField(auto_now_add=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    message = models.CharField(max_length=200)
+
+
+
+class Shop(models.Model):
+    supplier = models.ForeignKey(User, on_delete=models.CASCADE)
+    home_photo = models.ImageField(upload_to=upload_shopics,
+                                   null=True,
+                                   blank=True,
+                                   width_field='width_field',
+                                   height_field='height_field'
+                                   )
+    height_field = models.IntegerField(default=0)
+    width_field = models.IntegerField(default=0)
+    home_text = models.CharField(max_length=20, blank=True)
+    top_three = models.BooleanField(default=False)
+    contact_name = models.CharField(max_length=50, blank=True)
+    contact_address = models.CharField(max_length=100, blank=True)
+    contact_number = models.CharField(max_length=20, blank=True)
+
+    def save(self, *args, **kwargs):
+        try:
+            image = Image.open(self.home_photo)
+            current_aspect = self.width_field / self.height_field
+            new_aspect = 4 / 3
+
+            output = BytesIO()
+
+            if current_aspect == new_aspect:
+                pass
+            elif current_aspect > new_aspect:
+                rqw = new_aspect * self.height_field
+                left = (self.width_field - rqw) / 2
+                upper = 0
+                right = left + rqw
+                lower = self.height_field
+
+                box = (left, upper, right, lower)
+                new_image = image.crop(box)
+                new_image.save(output, format='PNG', quality=100)
+                output.seek(0)
+
+                self.home_photo = InMemoryUploadedFile(output, 'ImageField', "%s.jpg" % self.home_photo.name.split('.')[0],
+                                                       'image/jpeg', sys.getsizeof(output), None)
+
+                super(Shop, self).save()
+            else:
+                rqh = (3 / 4) * self.width_field
+                left = 0
+                upper = (self.height_field - rqh) / 2
+                right = self.width_field
+                lower = left + rqh
+                box = (left, upper, right, lower)
+                new_image = image.crop(box)
+                new_image.save(output, format='PNG', quality=100)
+                output.seek(0)
+
+                self.home_photo = InMemoryUploadedFile(output, 'ImageField', "%s.png" % self.home_photo.name.split('.')[0],
+                                                       'image/jpeg', sys.getsizeof(output), None)
+
+            super(Shop, self).save()
+        except ValueError:
+            super(Shop, self).save()
+
+
+class Pin(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    pin = models.IntegerField()
+    time = models.DateTimeField(auto_now_add=True)
+
+
 class Banner(models.Model):
     head = models.CharField(max_length=30)
     head_color = models.CharField(max_length=20,
@@ -341,24 +571,4 @@ class Banner(models.Model):
     height_field = models.IntegerField(default=0)
     width_field = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
-
-
-class Payment(models.Model):
-    date = models.DateTimeField(auto_now_add=True)
-    recipient = models.ForeignKey(User, on_delete=models.PROTECT)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-
-    # TODO consider adding account if there are multiple accounts
-
-
-class Due(models.Model):
-    recipient = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    narration = models.CharField(max_length=50)
-    type = models.CharField(max_length=20)
-    sale = models.ForeignKey(Sale, on_delete=models.CASCADE)
-    paid = models.BooleanField(default=False)
-    paid_date = models.DateTimeField(blank=True, null=True)
-    approved = models.BooleanField(default=False)
-    payment = models.ForeignKey(Payment, on_delete=models.PROTECT, null=True, blank=True)
-
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
